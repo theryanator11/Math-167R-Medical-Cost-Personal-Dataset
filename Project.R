@@ -86,3 +86,92 @@ for (i in 1:length(insur$age)){
   plot <- paste0("Age vs Costs for children amount", i)
   ggsave(plot)
 }
+
+
+insurance <- insurance_1
+insurancesex<-as.factor(insurancesex)
+insurancesmoker<-as.factor(insurancesmoker)
+insuranceregion<-as.factor(insuranceregion)
+model_1 <- lm(log(charges) ~ age + sex + bmi + children + smoker + region, data = insurance)
+summary(model_1)
+
+par(mfrow = c(2, 2))
+plot(model_1)
+
+model_2 <- lm(log(charges) ~ age + sex + bmi ~ smoker + children + region, data = insurance)
+par(mfrow = c(2, 2))
+plot(model_2)
+
+anova(model_1, model_2)
+AIC(model_1, model_2)
+
+library(car)
+vif(model_1)
+
+
+model_3 <- lm(log(charges) ~ smoker * age + bmi + children + region + sex, data = insurance)
+par(mfrow = c(2, 2))
+plot(model_3)
+
+anova(model_1, model_3)
+AIC(model_1, model_3)
+
+
+plot(model_1, which = 1, col = insurance$smoker)
+
+testing_data <- data.frame(
+  age = c(20, 40, 60),
+  sex = factor(c("female", "male", "female"),
+               levels = levels(insurance$sex)),
+  bmi = c(23, 30, 20),
+  children = c(0, 1, 3),
+  smoker = factor(c("yes", "no", "no"),
+                  levels = levels(insurance$smoker)),
+  region = factor(c("southeast", "northwest", "northeast"),
+                  levels = levels(insurance$region))
+)
+
+predictions <- predict(
+  model_1,
+  newdata = testing_data,
+  interval = "confidence",
+  level = 0.95
+)
+
+
+non_smokers <- insurance[insurance$smoker == "no",]
+smokers <- insurance[insurance$smoker == "yes",]
+
+
+non_smokers <- insurance[insurance$smoker == "no",]
+smokers <- insurance[insurance$smoker == "yes",]
+
+
+par(mfrow = c(2, 2))
+plot(insurancesex,insurancecharges)
+plot(non_smokerssex,nonsmokerscharges)
+plot(insurancesmoker,insurancecharges)
+plot(insuranceregion,insurancecharges)
+
+
+plot(insuranceage,insurancecharges, col = insurance$smoker) #r-squared code for the non-smoker part?
+plot(insurancebmi,insurancecharges, col = insurance$smoker)
+boxplot(non_smokersnonsmokerscharges)
+boxplot(smokerscharges~smokerschildren, data = smokers)
+
+library("ggplot2")
+insur <- ggplot(data = non_smokers, aes(x = bmi, y = charges, color = age))
+insur + geom_point(size = 3) +
+  labs(
+    title = "bmi vs cost",
+    x = "bmi",
+    y = "charges",
+    color = "age",
+  )
+
+test <- lm(age ~ charges, data = non_smokers)
+summary(test)
+test2 <- lm(test$charges ~ smoker, data = insurance)
+test3 <- lm(bmi ~ charges, data = non_smokers)
+summary(test3)
+test4 <- lm(charges ~ smoker * bmi, data = insurance)
